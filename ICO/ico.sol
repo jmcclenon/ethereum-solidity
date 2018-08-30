@@ -49,6 +49,7 @@ contract CryptosToken is ERC20Interface{
     }
     
     
+    //approve allowance
     function approve(address spender, uint tokens) public returns(bool){
         require(balances[msg.sender] >= tokens);
         require(tokens > 0);
@@ -58,6 +59,7 @@ contract CryptosToken is ERC20Interface{
         return true;
     }
     
+    //transfer tokens from the  owner account to the account that calls the function
     function transferFrom(address from, address to, uint tokens) public returns(bool){
         require(allowed[from][to] >= tokens);
         require(balances[from] >= tokens);
@@ -138,10 +140,13 @@ contract CryptosICO is CryptosToken{
     }
     
     
+    //only the admin can change the deposit address
     function changeDepositAddress(address newDeposit) public onlyAdmin{
         deposit = newDeposit;
     }
     
+    
+    //returns ico state
     function getCurrentState() public view returns(State){
         if(icoState == State.halted){
             return State.halted;
@@ -175,6 +180,7 @@ contract CryptosICO is CryptosToken{
         
         deposit.transfer(msg.value);//transfer eth to the deposit address
         
+        //emit event
         emit Invest(msg.sender, msg.value, tokens);
         
         return true;

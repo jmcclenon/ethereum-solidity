@@ -1,14 +1,18 @@
 pragma solidity ^0.4.24;
 
 contract FundRaising{
+    //contributors to the FundRaising Campaign
     mapping(address => uint) public contributors;
+    
     address public admin;
     uint public noOfContributors;
     uint public minimumContribution;
     uint public deadline; //this is a timestamp (seconds)
+    //amount that must be raised for a successful Campaign
     uint public goal;
     uint public raisedAmount = 0;
     
+    //Spending Request created by admin, must be voted by donors
     struct Request{
         string description;
         address recipient;
@@ -18,6 +22,7 @@ contract FundRaising{
         mapping(address => bool) voters;
     }
     
+    //dynamic array of requests
     Request[] public requests;
     
     constructor(uint _goal, uint _deadline) public{
@@ -34,6 +39,7 @@ contract FundRaising{
         require(msg.sender == admin);
         _;
     }
+   
    
     function contribute() public payable{
         require(now < deadline);
@@ -52,6 +58,7 @@ contract FundRaising{
         return address(this).balance;
     }
     
+    //refund if goal not met within deadline
     function getRefund() public{
         require(now > deadline);
         require(raisedAmount < goal);
@@ -67,6 +74,7 @@ contract FundRaising{
     }
     
     
+    //admin creates spending request
     function createRequest(string _description, address _recipient, uint _value) public onlyAdmin {
         Request memory newRequest = Request({
            description: _description,
@@ -77,12 +85,13 @@ contract FundRaising{
         
             
         });
-        
+    
         requests.push(newRequest);
     }
     
     
-    
+
+    //contributors vote for a request
   function voteRequest(uint index) public{
       Request storage thisRequest = requests[index];
     
@@ -94,24 +103,15 @@ contract FundRaising{
       
   }
     
-    
+    //if voted, owner sends money to the recipient (vendor, seller)
     function makePayment(uint index) public onlyAdmin{
         Request storage thisRequest  = requests[index];
         require(thisRequest.completed == false);
         
         require(thisRequest.noOfVoters > noOfContributors / 2);//more than 50% voted
-        thisRequest.recipient.transfer(thisRequest.value); //trasfer money to the recipient
+        thisRequest.recipient.transfer(thisRequest.value); //trasfer the money to the recipient
         
         thisRequest.completed = true;
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
 }

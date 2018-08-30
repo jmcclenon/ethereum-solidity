@@ -1,5 +1,15 @@
 pragma solidity ^0.4.24;
 
+contract AuctionCreator{
+    //dynamic array with addresses of deployed auctions
+    address[] public auctions; 
+    
+    function createAuction() public{
+        address newAuction = new Auction(msg.sender);
+        auctions.push(newAuction);
+    }
+}
+
 contract Auction{
     address public owner;
     uint public startBlock;
@@ -10,7 +20,7 @@ contract Auction{
     enum State {Started, Running, Ended, Canceled}
     State public auctionState;
     
-    uint public highestBindingBind;
+    uint public highestBindingBid;
     address public highestBidder;
     
     mapping(address => uint) public bids;
@@ -18,8 +28,8 @@ contract Auction{
     uint bidIncrement;
     
 
-    constructor() public{
-        owner = msg.sender;
+    constructor(address creator) public{
+        owner = creator;
         auctionState = State.Running;
         
         startBlock = block.number;
@@ -51,7 +61,7 @@ contract Auction{
     }
     
     
-    
+    //a pure function neither reads nor writes to the blockchain
     function min(uint a, uint b) pure internal returns(uint){
         if (a <= b){
             return a;
@@ -60,6 +70,7 @@ contract Auction{
         }
     }
     
+    //cancel, only by owner
     function cancelAuction() public onlyOwner{
         auctionState = State.Canceled;
     }
@@ -71,14 +82,14 @@ contract Auction{
         
         uint currentBid = bids[msg.sender] + msg.value;
         
-        require(currentBid > highestBindingBind);
+        require(currentBid > highestBindingBid);
         
         bids[msg.sender] = currentBid;
         
         if (currentBid <= bids[highestBidder]){
-            highestBindingBind = min(currentBid + bidIncrement, bids[highestBidder]);
+            highestBindingBid = min(currentBid + bidIncrement, bids[highestBidder]);
         }else{
-             highestBindingBind = min(currentBid, bids[highestBidder] + bidIncrement);
+             highestBindingBid = min(currentBid, bids[highestBidder] + bidIncrement);
              highestBidder = msg.sender;
         }
     return true;
@@ -87,24 +98,25 @@ contract Auction{
     
     
     function finalizeAuction() public{
-       require(auctionState == State.Canceled || block.number > endBlock); //the auction has been Canceled
+       //the auction has been Ended or Canceled
+       require(auctionState == State.Canceled || block.number > endBlock); 
        
        require(msg.sender == owner || bids[msg.sender] > 0);
        
        address recipient;
        uint value;
        
-       if(auctionState == State.Canceled){
+       if(auctionState == State.Canceled){ //canceled not ended
            recipient = msg.sender;
            value = bids[msg.sender];
        }else{//ended not canceled
-           if(msg.sender == owner){
+           if(msg.sender == owner){ //the owner finalizes the auction
                recipient = owner;
-               value = highestBindingBind;
-           }else{
+               value = highestBindingBid;
+           }else{//another user finalizes the auction
                if (msg.sender == highestBidder){
                    recipient = highestBidder;
-                   value = bids[highestBidder] - highestBindingBind;
+                   value = bids[highestBidder] - highestBindingBid;
                }else{//this is neiher the owner nor the highest bidder
                    recipient = msg.sender;
                    value = bids[msg.sender];
@@ -112,9 +124,10 @@ contract Auction{
            }
        }
        
+       //sends value to the recipient
        recipient.transfer(value);
         
     }
-    
-    
+
 }
+

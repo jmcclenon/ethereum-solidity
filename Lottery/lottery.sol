@@ -23,6 +23,7 @@ contract Lottery{
         return address(this).balance; //return contract balance
     }
     
+    //returns a very big pseodo-random integer no.
     function random() public view returns(uint256){
        return uint256(keccak256(block.difficulty, block.timestamp, players.length));
     }
@@ -30,10 +31,12 @@ contract Lottery{
     function selectWinner() public {
         require(msg.sender == manager);
         
+
         uint r = random();
         
         address winner;
         
+        //a random index
         uint index = r % players.length;
         winner = players[index];
         

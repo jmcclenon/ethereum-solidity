@@ -8,13 +8,14 @@ contract Property{
     uint public last_sent_value;
 
     
-       //contract constructor
+    //contract constructor, initializes the owner variable with the address
+    //of the account that deploys the contract
     constructor() public{
        owner = msg.sender;
     }
     
+    //returns contract balance
     function get_balance() view public returns (uint){
-        
         return address(this).balance;
     }
     
@@ -23,6 +24,7 @@ contract Property{
         location = "London";
     }
     
+    //msg.sender is the address of the account that calls this function
     function transfer_balance(address recipient_address, uint amount) public returns(bool) {
         if(msg.sender == owner){
              if (amount <= get_balance()){
@@ -37,7 +39,7 @@ contract Property{
     }
 
     function sendEther() payable public{
-       last_sent_value = msg.value;
+       last_sent_value = msg.value; //value in wei sent to this contract when calling the function
     }
     
     //creates a transaction and costs gas
@@ -52,17 +54,6 @@ contract Property{
         return true;
     }
     
-    function f() view public returns(uint){
-        uint start = gasleft();
-        
-        uint j = 5;
-        for(uint i=0;i<10;i++){
-            j++;
-        }
-        
-        return start - gasleft();
-        
-    }
     
 }
 
