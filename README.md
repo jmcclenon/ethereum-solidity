@@ -1,1 +1,1 @@
-# ethereum-solidity
+This repository contains the course files for my "Master Ethereum & Solidity Programming: Build Real-World Apps" course on Udemy: https://www.udemy.com/master-ethereum-and-solidity-programming-with-real-world-apps/?couponCode=BLOCKCHAIN_ETH
